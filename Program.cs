@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using DotNet8ApiDemo.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -12,17 +13,35 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(opt =>
-{
-    opt.AddSecurityDefinition("oauth2", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-    {
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Name = "Authorization",
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
-    });
+//builder.Services.AddSwaggerGen(opt =>
+//{
+//    opt.AddSecurityDefinition("oauth2", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+//    {
+//        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+//        Name = "Authorization",
+//        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+//    });
 
-    opt.OperationFilter<SecurityRequirementsOperationFilter>();
-});
+//    opt.OperationFilter<SecurityRequirementsOperationFilter>();
+//});
+builder.Services.AddSwaggerGen();
+
+builder.Services.AddApiVersioning(opt =>
+{
+    opt.AssumeDefaultVersionWhenUnspecified = true;
+    opt.DefaultApiVersion = ApiVersion.Default; //new Asp.Versioning.ApiVersion(1, 0);
+    opt.ReportApiVersions = true;
+    opt.ApiVersionReader = ApiVersionReader.Combine(
+        new QueryStringApiVersionReader("api-version"),
+        new HeaderApiVersionReader("api-version"),
+        new UrlSegmentApiVersionReader()
+        );
+})
+    .AddApiExplorer(opt => 
+    {
+        opt.GroupNameFormat = "'v'V";
+        opt.SubstituteApiVersionInUrl = true;
+    });
 
 var connectionString = builder.Configuration.GetConnectionString("Defaults");
 builder.Services.AddDbContext<DataContext>(opt => opt.UseSqlite(connectionString));
